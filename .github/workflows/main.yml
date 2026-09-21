@@ -32,13 +32,17 @@ jobs:
       - name: Install dependencies and build
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          VITE_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          PKG_DIR=$(dirname $(find . -maxdepth 2 -name "package.json" | head -n 1))
-          echo "Found project in: $PKG_DIR"
-          cd "$PKG_DIR"
-          npm install --legacy-peer-deps
-          npm run build
-          if [ "$PKG_DIR" != "." ]; then
+          if [ -f "package.json" ]; then
+            npm install --legacy-peer-deps
+            npm run build
+          else
+            SUB_DIR=$(find . -maxdepth 2 -name "package.json" -exec dirname {} \; | head -n 1)
+            echo "Building from subfolder: $SUB_DIR"
+            cd "$SUB_DIR"
+            npm install --legacy-peer-deps
+            npm run build
             mkdir -p ../dist
             cp -r dist/* ../dist/
           fi
